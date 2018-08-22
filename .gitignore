@@ -3,4 +3,4 @@
 *.png
 *.csv
 *.npy
-*.txt
+parsec*.txt

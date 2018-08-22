@@ -1,0 +1,13 @@
+Put data file output here instead of in the main directory. 
+
+Also write anything important about how you made them in this notes file. It might come in handy in the future.
+
+ACR
+
+
+FILE INFO:
+
+GDR2_TAUAUR_cleaned.csv : ACR made this a long time ago and its most of Taurus, with some cleaning for e.g. nans and other strange things.
+
+gaia_dr2_tauaur.csv: Everything in the Taurus window, less cleaned than the above.
+

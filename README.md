@@ -19,3 +19,23 @@ models.
 - JMW: Once metallicity is done, think about extinction. 
 - JMW+ACR?: Start converting the jupyter note code that is basically finished into stand-alone python 
 scripts that can be easily imported and used on e.g. the TACC super computers.
+
+
+General Coding Guidelines for a Good Time:
+- Name every file logically so that its easy to understand what its for. Also write comments at 
+start of each script/notebook that describes what its for and maybe how to use it.
+-Always add and commit at the end of working. And write a good commit message. Remember to push after commit.
+-How to git:
+Start with getting changes:
+git pull 
+git status (look for the new and modified stuff)
+git add filename (modified and new files)
+can also do 
+git add *.py or git add *.ipynb which will add all python scripts/notebooks that are new/mod
+
+Once everything is good to go do:
+git commit -m 'A useful message on what you did, but not too long'
+Send all to the cloud master repository
+git push 
+ 
+Login to github and check for pull requests.
