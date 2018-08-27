@@ -312,10 +312,11 @@ def probability_calculation_all(random_samples,G,BP,RP,sig_G,sig_BP,sig_RP,sourc
         age_error[i]   = sigage*1.0
         mass_error[i]  = sigmass*1.0
     
-    if np.mod(i+1,1) == 0:
-        tneed = (time.time()-tstart)/(i+1)*(len(G)-i-1)
-        print('Up to ' + str(i+1) + ' out of ' + str(len(G)) + ' stars')
-        print('Will finish at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tneed+time.time())))
+        if np.mod(i+1,100) == 0:
+            tneed = (time.time()-tstart)/(i+1)*(len(G)-i-1)
+            print('Up to ' + str(i+1) + ' out of ' + str(len(G)) + ' stars')
+            print('Will finish at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tneed+time.time())))
+    
     return age_result,mass_result,age_error,mass_error
 
 

@@ -1,0 +1,1 @@
+The super computer needs things called batch scripts to start jobs. This is a place to store those long-term as they are a record of exactly how things were done.  These are really easy to make, check the example.

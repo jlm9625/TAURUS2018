@@ -13,7 +13,7 @@ data = pd.read_csv(datadir + dfile)
 clean_dfile = tau.clean_gaia_data(data,'dummy.csv')
 print(clean_dfile)
 ##can comment the above out once you have run them and use the following line
-clean_dfile = 'datastorage/dummy_20180822-12:04:02csv'
+clean_dfile = 'datastorage/dummy_20180822-12:04:02.csv'
 
 ##now read the clean file
 cdata = pd.read_csv(clean_dfile,sep=',') 
