@@ -1,0 +1,52 @@
+Here are all the basic commands for terminal usage. Once you know them you’ll be really fast compared to everyone else. There’s lots more but you can learn them as you go
+
+Change directory
+cd Your/Directory/Spot/
+move back one folder
+cd ..
+move to your home folder 
+cd ~/
+
+copy
+>cp Path/to/file.zzz Path/to/location.zzz
+for copying a folder
+>cp -r Path/to/folder path/to/location
+
+list everything in folder in order of last changed and in human read format
+>ls -rtlh  
+
+list all text files in this directory:
+>ls -rtlh *.txt
+
+show contents of a file in terminal (great for a quick look): use arrow keys navigate and q to quit.
+>less filename.xyz 
+
+move a file (like cp but deletes the source)
+>mv Path/to/file.zzz Path/to/location.zzz
+
+my location
+>pwd
+
+open finder from terminal in current folder
+>open ./
+
+open file with default program in mac:
+>open filename.xyz
+
+open file a few folder downstream:
+>open folder/folder2/filename.xyz
+
+Location Shortcuts in unix:
+~/ is home so for e.g.  cd ~/Desktop would take you straight to the desktop folder
+./ is where you are 
+../ is upstream one folder
+../../ is upstream two folders and so on
+* unlimited size place holder in a filename
+
+manual pages:
+>man cmd
+where cmd is any command name e.g:
+>man mv 
+will tell you everything about the move (mv) command
+
+
