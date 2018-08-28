@@ -1,11 +1,11 @@
 Here are all the basic commands for terminal usage. Once you know them you’ll be really fast compared to everyone else. There’s lots more but you can learn them as you go
 
 Change directory
-cd Your/Directory/Spot/
+>cd Your/Directory/Spot/
 move back one folder
-cd ..
+>cd ..
 move to your home folder 
-cd ~/
+>cd ~/
 
 copy
 >cp Path/to/file.zzz Path/to/location.zzz
@@ -51,10 +51,10 @@ will tell you everything about the move (mv) command
 
 
 GIT reminder:
-git status
-git add filename
-git commit -m ‘useful commit message’
-git push
+>git status
+>git add filename (e.g. git add taurus_functions.py)
+>git commit -m ‘useful commit message’
+>git push
 
 
 
