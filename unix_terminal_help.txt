@@ -50,3 +50,13 @@ where cmd is any command name e.g:
 will tell you everything about the move (mv) command
 
 
+GIT reminder:
+git status
+git add filename
+git commit -m ‘useful commit message’
+git push
+
+
+
+
+
