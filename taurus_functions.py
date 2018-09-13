@@ -126,7 +126,7 @@ def sample_generate_2d(nsamples=2000000, regen=False, outfilename='isochrones/tm
    
    
     if regen == False:
-        print 'Attempting to read previously generated samples'
+        print ('Attempting to read previously generated samples')
         if readfile == None: 
             print('Give me a read file if you dont want to regen!!')
             return -1
@@ -139,7 +139,7 @@ def sample_generate_2d(nsamples=2000000, regen=False, outfilename='isochrones/tm
         return f
     
     if regen == True:
-        print 'Generating Samples'
+        print ('Generating Samples')
         if modelfile == None:
             print('Please give me a model file if you want to generate samples')
             return -1
@@ -224,6 +224,147 @@ def sample_generate_2d(nsamples=2000000, regen=False, outfilename='isochrones/tm
         pickle.dump(model_stars, open(outfilename,'wb'))
         print('outputting samples to ' + outfilename + ' and returning the samples to user')
         return model_stars
+    
+ 
+#I think I'm most confused where/how we are readin in the stacked files. I'm unsure how to read in multiple files and have it pull from all of those, thats a little confusing to me. I did make the stacked files and they're labeled by metallicity in the isochrones folder in taurus_project
+def sample_generate_3d(nsamples=2000000, regen=False, outfilename='isochrones_metallicity/tmp.pkl',readfile=None, modelfile=None,agelims=[1.0,3000.0],masslims=[0.1,1.0],use_mini=True):
+    '''
+    Function to generate samples for the 3D version of the model (where metallicity is included)
+    '''
+   
+   
+    if regen == False:
+        print ('Attempting to read previously generated samples')
+        if readfile == None: 
+            print('Give me a read file if you dont want to regen!!')
+            return -1
+        if os.path.isfile(readfile) == False:
+            print('The read file is non-existant!!')
+            print('You tried to read: ' + readfile + ' please try another ')
+            return -1
+        f = read_pickle_file(readfile)
+#        f = pickle.load(open(readfile, 'rb'))
+        return f
+    
+    if regen == True:
+        print ('Generating Samples')
+        if modelfile == None:
+            print('Please give me a model file if you want to generate samples')
+            return -1
+        if os.path.isfile(modelfile)==False:
+            print('The modelfile is non-existant!!')
+            print('You tried to read: ' + modelfile + ' please try another ')
+            return -1
+            
+        model_ages,model_array=pickle.load(open(modelfile,'rb'))
+        model_stars = np.zeros((nsamples,9),dtype=float)
+        
+        random_age = 10**(np.random.uniform(np.log10(agelims[0]), np.log10(agelims[1]),size=nsamples))
+        
+        random_metallicity = np.random.uniform(-0.3, 0.3, size=nsamples)#actual z ranges from 0.00761804595 to 0.03032798718
+        random_mass = np.random.uniform(masslims[0],masslims[1],size=nsamples)
+        random_binprob = np.random.uniform(0.0,1.0,size=nsamples)
+        random_tripprob = np.random.uniform(0.0,1.0,size=nsamples)
+        binary_flag = np.zeros(len(random_mass)) -1
+        triple_flag_1 = np.zeros(len(random_mass)) -1 #Not sure if this is the best way to do this
+        triple_flag_2 = np.zeros(len(random_mass)) -1 #Not sure if this is the best way to do this
+       # pdb.set_trace()
+        for i in range(len(random_age)):
+            low_indx = np.where(model_ages <= random_age[i])[0][-1]
+            high_indx = np.where(model_ages > random_age[i])[0][0]
+            
+            lowmodel  = model_array[low_indx]
+            highmodel = model_array[high_indx]
+        
+            ## ACR!!: Probably a good idea to sample on Mini (initial mass) rather 
+            ##than Mass (current mass), this will eliminate interpolation problems. 
+            if use_mini ==True:
+                lmass = lowmodel.Mini
+                hmass = highmodel.Mini
+            else:
+                lmass = lowmodel.Mass
+                hmass = highmodel.Mass        
+        
+        
+            low_gmag = np.interp(random_mass[i],lmass,lowmodel.Gmag)
+            low_bpmag = np.interp(random_mass[i],lmass,lowmodel.G_BPmag)
+            low_rpmag = np.interp(random_mass[i],lmass,lowmodel.G_RPmag)
+            high_gmag = np.interp(random_mass[i],hmass,highmodel.Gmag)
+            high_bpmag = np.interp(random_mass[i],hmass,highmodel.G_BPmag)
+            high_rpmag = np.interp(random_mass[i],hmass,highmodel.G_RPmag)
+            
+            if random_binprob[i] < 0.44:
+                random_companion_mass = np.random.uniform(np.max([lmass[0],hmass[0]]),random_mass[i],size=1)[0]
+                binary_flag[i] = random_companion_mass/random_mass[i]
+                ##now do the above interpolation on the grid but for the companion random mass
+                
+                ##this gives you a set of low/high G/R/B mags foe the companion
+               
+         
+               # pdb.set_trace()
+                low_gmag_comp  = np.interp(random_companion_mass,lmass,lowmodel.Gmag)
+                high_gmag_comp = np.interp(random_companion_mass,hmass,highmodel.Gmag)
+                low_bpmag_comp  = np.interp(random_companion_mass,lmass,lowmodel.G_BPmag)
+                high_bpmag_comp = np.interp(random_companion_mass,hmass,highmodel.G_BPmag)
+                low_rpmag_comp  = np.interp(random_companion_mass,lmass,lowmodel.G_RPmag)
+                high_rpmag_comp = np.interp(random_companion_mass,hmass,highmodel.G_RPmag)
+                
+                low_gmag  = -2.5*np.log10(10**(-0.4*low_gmag) + 10**(-0.4*low_gmag_comp))
+                high_gmag = -2.5*np.log10(10**(-0.4*high_gmag) + 10**(-0.4*high_gmag_comp))
+                low_bpmag  = -2.5*np.log10(10**(-0.4*low_bpmag) + 10**(-0.4*low_bpmag_comp))
+                high_bpmag = -2.5*np.log10(10**(-0.4*high_bpmag) + 10**(-0.4*high_bpmag_comp))
+                low_rpmag  = -2.5*np.log10(10**(-0.4*low_rpmag) + 10**(-0.4*low_rpmag_comp))
+                high_rpmag = -2.5*np.log10(10**(-0.4*high_rpmag) + 10**(-0.4*high_rpmag_comp))
+                
+                ##add them to the corresponding values for the primary
+            if random_tripprob[i] < #I don't have the Raghavan paper with this info, so if you could sent that to me I can add in                                     the value here
+                random_companion_1_mass = np.random.uniform(np.max([lmass[0],hmass[0]]),random_mass[i],size=1)[0]
+                random_companion_2_mass = np.random.uniform(np.max([lmass[0],hmass[0]]),random_mass[i],size=1)[0]
+                triple_flag_1[i] = random_companion_1_mass/random_mass[i] #Not sure the best way/how to do this; I'm assuming we want to just divide the mass of the original target object by 3 and create 3 new objects?
+                triple_flag_2[i] =random_companion_2_mass/random_mass[i] #Not sure the best way/how to do this; I'm assuming we want to just divide the mass of the original target object by 3 and create 3 new objects?
+                '''low_gmag_comp  = np.interp(random_companion_mass,lmass,lowmodel.Gmag)
+                high_gmag_comp = np.interp(random_companion_mass,hmass,highmodel.Gmag)
+                low_bpmag_comp  = np.interp(random_companion_mass,lmass,lowmodel.G_BPmag)
+                high_bpmag_comp = np.interp(random_companion_mass,hmass,highmodel.G_BPmag)
+                low_rpmag_comp  = np.interp(random_companion_mass,lmass,lowmodel.G_RPmag)
+                high_rpmag_comp = np.interp(random_companion_mass,hmass,highmodel.G_RPmag)
+                
+                low_gmag  = -2.5*np.log10(10**(-0.4*low_gmag) + 10**(-0.4*low_gmag_comp))
+                high_gmag = -2.5*np.log10(10**(-0.4*high_gmag) + 10**(-0.4*high_gmag_comp))
+                low_bpmag  = -2.5*np.log10(10**(-0.4*low_bpmag) + 10**(-0.4*low_bpmag_comp))
+                high_bpmag = -2.5*np.log10(10**(-0.4*high_bpmag) + 10**(-0.4*high_bpmag_comp))
+                low_rpmag  = -2.5*np.log10(10**(-0.4*low_rpmag) + 10**(-0.4*low_rpmag_comp))
+                high_rpmag = -2.5*np.log10(10**(-0.4*high_rpmag) + 10**(-0.4*high_rpmag_comp))''' #again not sure the best way to do this so we can talk about if first
+            
+            
+            
+            
+            
+            model_stars[i,0] =(random_age[i])
+            model_stars[i,1] =(random_mass[i])
+            model_stars[i,2] = np.interp(random_age[i],[model_ages[low_indx],model_ages[high_indx]],[low_gmag,high_gmag])
+            model_stars[i,3] = np.interp(random_age[i],[model_ages[low_indx],model_ages[high_indx]],[low_bpmag,high_bpmag])
+            model_stars[i,4] = np.interp(random_age[i],[model_ages[low_indx],model_ages[high_indx]],[low_rpmag,high_rpmag])
+            model_stars[i,5] = binary_flag[i]
+            model_stars[i,6] = (random_metallicity[i])
+            model_stars[i,7] = triple_flag_1[i] #Again, not sure if this is right
+            model_stars[i,8] = triple_flag_2[i] #Again, not sure if this is right
+          
+            if np.mod(i+1,10000) == 0: print('up to ' + str(i+1) + ' out of ' + str(nsamples))
+            
+           
+        pickle.dump(model_stars, open(outfilename,'wb'))
+        print('outputting samples to ' + outfilename + ' and returning the samples to user')
+        return model_stars
+        
+    
+    
+    
+    
+    
+    
+    
+    
         
 def probability_calculation_singlestar(random_samples,G,BP,RP,sig_G,sig_BP,sig_RP,sourceID,run_2mass=False,showhist=False,histsave=''):
     '''

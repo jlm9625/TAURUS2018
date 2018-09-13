@@ -19,6 +19,7 @@ clean = np.where(np.array(headarr) != '')[0]
 headarr = np.array(headarr)[clean]
 #pdb.set_trace()
 files= glob.glob('isochrones/parsec1.2*txt')
+print(files)
 for i in range(len(files)):
     modfile=open(files[i],'r')
     linenumber=0
@@ -32,7 +33,7 @@ for i in range(len(files)):
             if len(thisline) == 0: 
                 #pdb.set_trace()
                 break
-                print 'here'
+                print ('here')
 
             #if done == -1: pdb.set_trace()
             if thisline[0] != '#':
