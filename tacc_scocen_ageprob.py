@@ -17,6 +17,17 @@ ncor = size
 jobID = str(sys.argv[1]) 
 subg  = str(sys.argv[2])
 
+##Make a new folder for the results. If it doesn't exists already, cancel everything rather than overwrite stuff.
+##output with starting timestamp so all runs are distinguishable
+datestamp    = time.strftime('%Y%m%d-%H:%M', time.localtime(time.time())) 
+outdir = 'outputs/' + jobID + '_'+datestamp+'/'
+if rank == 0:
+    if os.path.exists(outdir): 
+        print 'Failed Due to Pre-existing output!!' ##SHOULD NEVER HAPPEN!!
+        comm.Abort()
+    else: os.makedirs(outdir)
+
+
 input_file='fail' 
 if subg == 'US':input_file = 'gaia_dr2_usco_inputformat_20180516pair_ageprobcleaned_20180919-12:58:56_inputformat.pkl'
 if subg == 'UCL':input_file = 'gaia_dr2_ucl_inputformat_20180511pair_ageprobcleaned_20180919-13:51:29_inputformat.pkl'
@@ -49,15 +60,6 @@ G,BP,RP,sig_G,sig_BP,sig_RP,sourceID = pickle.load(open(datadir+input_file,'rb')
 # pdb.set_trace()
 
 
-##Make a new folder for the results. If it doesn't exists already, cancel everything rather than overwrite stuff.
-##output with starting timestamp so all runs are distinguishable
-datestamp    = time.strftime('%Y%m%d-%H:%M:%S', time.localtime(time.time())) 
-outdir = 'outputs/' + jobID + '_'+datestamp+'/'
-if rank == 0:
-    if os.path.exists(outdir): 
-        print 'Failed Due to Pre-existing output!!' ##SHOULD NEVER HAPPEN!!
-        comm.Abort()
-    else: os.makedirs(outdir)
 
 
 ##now each core has to figure out which data entries it is responsible for:
