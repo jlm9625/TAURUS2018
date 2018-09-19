@@ -438,7 +438,7 @@ def show_me_histograms(prob,model_age,model_mass,savename = '',ar=[1.0,3000.],mr
     if savename != '': plt.savefig(savename)
     plt.show()
     
-def probability_calculation_all(random_samples,G,BP,RP,sig_G,sig_BP,sig_RP,sourceID,run_2mass=False):   
+def probability_calculation_all(random_samples,G,BP,RP,sig_G,sig_BP,sig_RP,sourceID,run_2mass=False,logfile=None):   
     '''
     mag and error inputs are now arrays
     This just loops probability_calculation_singlestar for each stars
@@ -446,6 +446,9 @@ def probability_calculation_all(random_samples,G,BP,RP,sig_G,sig_BP,sig_RP,sourc
     
     if (len(G) != len(BP)) | (len(G) != len(RP)) | (len(G) != len(sig_G)) | (len(G) != len(sig_RP)) | (len(G) != len(sig_BP)) : 
         print('Input photometry/error arrays are not the same size!!!!!!')
+        if logfile != None:
+            logfile.write('pcalc: inputs wrong sizes, this cant happen so.... \n') 
+            logfile.flush()
         return -1
     
     age_result  = np.zeros(len(G))
@@ -454,6 +457,9 @@ def probability_calculation_all(random_samples,G,BP,RP,sig_G,sig_BP,sig_RP,sourc
     mass_error  = np.zeros(len(G))
     tstart = time.time()
     for i in range(len(G)):
+        if logfile != None:
+            logfile.write('pcalc: ' + str(i) + ' of ' + str(len(G)) + ' ' + str(sourceID[i]) + ' \n')
+            logfile.flush()
         prob_model_given_data_star,expage,expmass,sigage,sigmass = probability_calculation_singlestar(random_samples,G[i],BP[[i]],RP[[i]],sig_G[[i]],sig_BP[[i]],sig_RP[[i]],sourceID[[i]],run_2mass=run_2mass,showhist=False)
         age_result[i]  = expage*1.0
         mass_result[i] = expmass*1.0
@@ -465,6 +471,8 @@ def probability_calculation_all(random_samples,G,BP,RP,sig_G,sig_BP,sig_RP,sourc
             print('Up to ' + str(i+1) + ' out of ' + str(len(G)) + ' stars')
             print('Will finish at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tneed+time.time())))
     
+    logfile.write('finished pcalc, returning \n')
+    logfile.flush()
     return age_result,mass_result,age_error,mass_error
 
 
