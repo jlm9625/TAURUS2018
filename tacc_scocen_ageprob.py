@@ -7,12 +7,23 @@ import pandas as pd
 from mpi4py import MPI
 from mpi4py.MPI import ANY_SOURCE
 
+datadir     = 'datastorage/'
+isodir      = 'isochrones/'
 #set up the communicator basics
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank() ##each core's ID number
 size = comm.Get_size() ##the number of cores running
 ncor = size
 jobID = str(sys.argv[1]) 
+subg  = str(sys.argv[2])
+
+input_file='fail' 
+if subg == 'US':input_file = 'gaia_dr2_usco_inputformat_20180516pair_ageprobcleaned_20180919-12:58:56_inputformat.pkl'
+if subg == 'UCL':input_file = 'gaia_dr2_ucl_inputformat_20180511pair_ageprobcleaned_20180919-13:51:29_inputformat.pkl'
+if subg == 'LCC':input_file = 'gaia_dr2_lcc_inputformat_20180511pair_ageprobcleaned_20180919-14:08:34_inputformat.pkl'
+if input_file == 'fail':
+    print('thats not a valid scocen subgroup!?! ABORTING')
+    comm.Abort()
 
 ##Here is a script that will run on a supercoputer. 
 ##You can also run it on your own computer (which has multiple cores) 
@@ -23,15 +34,20 @@ jobID = str(sys.argv[1])
 
 
 ##here's the data, read it in. Assumes all data prep was done before on a local machine.
-datadir     = 'datastorage/'
-clean_dfile = 'datastorage/GDR2_TAUAUR_cleaned.csv'
-cdata       = pd.read_csv(clean_dfile,sep=',') 
 
-##for testing, just run two stars that are Taurus members:
-torun = np.where((cdata.source_id.values == 145213192171160064) | (cdata.source_id.values== 145213875069914496) )[0]
-cdata =cdata.ix[torun]
+G,BP,RP,sig_G,sig_BP,sig_RP,sourceID = pickle.load(open(datadir+input_file,'rb'))
 
-#pdb.set_trace()
+##for testing on specific stars
+# torun = np.where((sourceID == 6057558691062793856) | (sourceID== 6237142264484167296) )[0]
+# G = G[torun]
+# RP=RP[torun]
+# BP=BP[torun]
+# sig_G = sig_G[torun]
+# sig_RP=sig_RP[torun]
+# sig_BP=sig_BP[torun]
+# sourceID=sourceID[torun]
+# pdb.set_trace()
+
 
 ##Make a new folder for the results. If it doesn't exists already, cancel everything rather than overwrite stuff.
 ##output with starting timestamp so all runs are distinguishable
@@ -45,7 +61,7 @@ if rank == 0:
 
 
 ##now each core has to figure out which data entries it is responsible for:
-nstars = len(cdata) ##the number of input stars to run
+nstars = len(sourceID) ##the number of input stars to run
 s   = nstars/ncor
 nx  = (s+1)*ncor - nstars
 ny  = nstars - s*ncor
@@ -60,13 +76,17 @@ if rank > nx-1:
 if rank == 0: print 'Using ' + str(nx) + ' cores of size ' + str(s) + ' and ' +str(ny) + ' cores of size ' + str(s+1)
 
 ##cut out each core's data:
-cdata = cdata.iloc[myrange[0]:myrange[1]]
+G = G[myrange[0]:myrange[1]]
+RP=RP[myrange[0]:myrange[1]]
+BP=BP[myrange[0]:myrange[1]]
+sig_G = sig_G[myrange[0]:myrange[1]]
+sig_RP=sig_RP[myrange[0]:myrange[1]]
+sig_BP=sig_BP[myrange[0]:myrange[1]]
+sourceID=sourceID[myrange[0]:myrange[1]]
 
-##now compute abs mags and so on. Each core just works on the data it's responsible for
-G,BP,RP,sig_G,sig_BP,sig_RP,sourceID = tau.produce_data_gaia(cdata)
 
 ##read in the model file Again, assuming it's pre-generated for us
-sample_2d = tau.sample_generate_2d(regen=False,outfilename = None,readfile='isochrones/fullsamp_mini.pkl',modelfile=None,agelims=[1.0,3000.0],masslims=[0.1,1.0])
+sample_2d = tau.sample_generate_2d(regen=False,outfilename=None,readfile='isochrones/Solar_fullrange_2M.pkl')
 
 age,mass,sig_age,sig_mass = tau.probability_calculation_all(sample_2d,G,BP,RP,sig_G,sig_BP,sig_RP,sourceID,run_2mass=False)
 
@@ -74,7 +94,8 @@ age,mass,sig_age,sig_mass = tau.probability_calculation_all(sample_2d,G,BP,RP,si
 ##now output everthing correctly
 ##make a unique filename and put it in the unique folder we already created/checked.
 #Just store the source ID's and the results to save space and time.
-pickle.dump((sourceID,age,mass,sig_age,sig_mass),open(outdir + 'result_'+str(rank)+'_'+datestamp+'.pkl','wb'))
+#also store the range of data points used
+pickle.dump((sourceID,age,mass,sig_age,sig_mass,myrange),open(outdir + 'result_'+str(rank)+'_'+datestamp+'.pkl','wb'))
 
 pdb.set_trace()
 

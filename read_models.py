@@ -18,7 +18,7 @@ headarr = headstring.split(' ')
 clean = np.where(np.array(headarr) != '')[0]
 headarr = np.array(headarr)[clean]
 #pdb.set_trace()
-files= glob.glob('isochrones/parsec1.2*txt')
+files= glob.glob('isochrones/parsec1.2s*txt')
 print(files)
 for i in range(len(files)):
     modfile=open(files[i],'r')

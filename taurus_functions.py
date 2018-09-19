@@ -33,32 +33,37 @@ def readfile(filename):
     output = pd.read_csv(filename, sep=',')
     return output
     
-def clean_gaia_data(data,outfilename,outdir='datastorage/'):
+def clean_gaia_data(data,outfilename,outdir='datastorage/',noclean=False):
     '''
     input a pandas table for Gaia data and clean it with some limits
     also input a filename string for the output.
     In future this needs to take in an additional table of 2MASS J/H/K magnitudes.
     '''
-    
-    badrow = np.where((np.isnan(data.parallax.values) == True) & (np.isnan(data.phot_g_mean_mag.values) == True) & (np.isnan(data.phot_rp_mean_mag.values) == True) & (np.isnan(data.phot_bp_mean_mag.values) == True))[0]
-    if len(badrow) == len(data):
-        print('Everything is NaN!?!?!?!?')
-        print('Not outputting anything')
-        return -1
-    print('Removing ' + str(len(badrow)) + ' entries with NaNs in key data')
+    if noclean == False:
+        badrow = np.where((np.isnan(data.parallax.values) == True) & (np.isnan(data.phot_g_mean_mag.values) == True) & (np.isnan(data.phot_rp_mean_mag.values) == True) & (np.isnan(data.phot_bp_mean_mag.values) == True))[0]
+        if len(badrow) == len(data):
+            print('Everything is NaN!?!?!?!?')
+            print('Not outputting anything')
+            return -1
+        print('Removing ' + str(len(badrow)) + ' entries with NaNs in key data')
 
-    data = data.drop(data.index[badrow])
+        data = data.drop(data.index[badrow])
 
 
-    ##Jordyn this is where this magnitude cuts can be placed. Note that
-    ##these are searching in the negative sense.
-    badrow = np.where((data.phot_bp_mean_flux_over_error.values) < 5)[0] 
-    if len(badrow) == len(data):
-        print('Your limit cuts ate all the data! Not outputting anything')
-        return -1
-    print('Removing ' + str(len(badrow)) + ' entries with bad photometry/parallax')
-    data = data.drop(data.index[badrow])
-    
+        ##Jordyn this is where this magnitude cuts can be placed. Note that
+        ##these are searching in the negative sense.
+        badrow = np.where((data.phot_bp_mean_flux_over_error.values) < 5)[0] 
+        if len(badrow) == len(data):
+            print('Your limit cuts ate all the data! Not outputting anything')
+            return -1
+        print('Removing ' + str(len(badrow)) + ' entries with bad photometry/parallax')
+        data = data.drop(data.index[badrow])
+    if noclean == True:
+        print('not cleaning anything from the input data')
+        ##just replace nans with 0 and a huge error
+        #actually, nans should just propagate, producing nans in the output right? THat's probably fine for now
+        ##badrow = np.where((np.isnan(data.parallax.values) == True) | (np.isnan(data.phot_g_mean_mag.values) == True) | (np.isnan(data.phot_rp_mean_mag.values) == True) | (np.isnan(data.phot_bp_mean_mag.values) == True))[0]
+
     ##output the results
     ##output with starting timestamp for uniquness
     datestamp    = time.strftime('%Y%m%d-%H:%M:%S', time.localtime(time.time()))
@@ -76,7 +81,7 @@ def clean_gaia_data(data,outfilename,outdir='datastorage/'):
     ##if everything is fine give the user the final filename of the clean data.
     return outdir+usefname
 
-def produce_data_gaia(data):
+def produce_data_gaia(data,writetofile=False):
     '''
     calculate mags, errors, and all those things for a 
     set of data. Assumes you have already cleaned the data for bad entries in 
@@ -113,7 +118,9 @@ def produce_data_gaia(data):
     abs_mag_bp_error = np.sqrt((mag_bp_error)**2 + np.abs(5*(data.parallax_error.values/data.parallax.values)/(np.log(10)))**2)
     abs_mag_rp_error = np.sqrt((mag_rp_error)**2 + np.abs(5*(data.parallax_error.values/data.parallax.values)/(np.log(10)))**2)
 
-    
+    if writetofile != False:
+        pickle.dump((abs_mag_g,abs_mag_bp,abs_mag_rp,abs_mag_g_error,abs_mag_bp_error,abs_mag_rp_error,data.source_id.values),open(writetofile,'wb'))
+        print('wrote the input variable to ' + writetofile)
     return abs_mag_g,abs_mag_bp,abs_mag_rp,abs_mag_g_error,abs_mag_bp_error,abs_mag_rp_error,data.source_id.values
     
 
@@ -317,7 +324,7 @@ def sample_generate_3d(nsamples=2000000, regen=False, outfilename='isochrones_me
                 high_rpmag = -2.5*np.log10(10**(-0.4*high_rpmag) + 10**(-0.4*high_rpmag_comp))
                 
                 ##add them to the corresponding values for the primary
-            if random_tripprob[i] < #I don't have the Raghavan paper with this info, so if you could sent that to me I can add in                                     the value here
+            if random_tripprob[i]: ##< #I don't have the Raghavan paper with this info, so if you could sent that to me I can add in                                     the value here
                 random_companion_1_mass = np.random.uniform(np.max([lmass[0],hmass[0]]),random_mass[i],size=1)[0]
                 random_companion_2_mass = np.random.uniform(np.max([lmass[0],hmass[0]]),random_mass[i],size=1)[0]
                 triple_flag_1[i] = random_companion_1_mass/random_mass[i] #Not sure the best way/how to do this; I'm assuming we want to just divide the mass of the original target object by 3 and create 3 new objects?
