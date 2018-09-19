@@ -97,8 +97,6 @@ age,mass,sig_age,sig_mass = tau.probability_calculation_all(sample_2d,G,BP,RP,si
 #also store the range of data points used
 pickle.dump((sourceID,age,mass,sig_age,sig_mass,myrange),open(outdir + 'result_'+str(rank)+'_'+datestamp+'.pkl','wb'))
 
-pdb.set_trace()
-
 print 'Done'
 
 
