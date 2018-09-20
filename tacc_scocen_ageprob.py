@@ -62,7 +62,6 @@ logfile.flush()
 
 ##now each core has to figure out which data entries it is responsible for:
 nstars = len(sourceID) ##the number of input stars to run
-ncor=336
 s   = nstars/ncor
 nx  = (s+1)*ncor - nstars
 ny  = nstars - s*ncor
@@ -75,7 +74,7 @@ if rank > nx-1:
 
 ##now it's clear how many test are running on each processor, tell the user
 if rank == 0: print 'Using ' + str(nx) + ' cores of size ' + str(s) + ' and ' +str(ny) + ' cores of size ' + str(s+1)
-pdb.set_trace()
+
 ##testing
 #myrange = [134640,134640+1870+1]
 ##cut out each core's data:
