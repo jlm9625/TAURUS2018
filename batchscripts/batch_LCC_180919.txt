@@ -11,5 +11,5 @@
 #SBATCH --mail-type=end 
 module load python 
 cd ../
-ibrun python tacc_scocen_ageprob.py LCC180919 US
+ibrun python tacc_scocen_ageprob.py LCC180919 LCC
 
