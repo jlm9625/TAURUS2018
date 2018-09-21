@@ -6,6 +6,15 @@ import glob,pdb,os,sys
 ##US chunk
 datadir= 'outputs/US180919_20180919-16:13/'
 datafile = 'datastorage/gaia_dr2_usco_inputformat_20180516pair_ageprobcleaned_20180919-12:58:56_inputformat.pkl'
+outname= 'US_ageprob.pkl'
+
+datadir= 'outputs/UCL180919_20180919-22:32/'
+datafile= 'datastorage/gaia_dr2_ucl_inputformat_20180511pair_ageprobcleaned_20180919-13:51:29_inputformat.pkl'
+outname='UCL_ageprob.pkl'
+
+datadir= 'outputs/LCC180919_20180919-22:49/'
+datafile='datastorage/gaia_dr2_lcc_inputformat_20180511pair_ageprobcleaned_20180919-14:08:34_inputformat.pkl'
+outname = 'LCC_ageprob.pkl'
 
 #gaia_dr2_lcc_inputformat_20180511pair_ageprobcleaned_20180919-14:08:34_inputformat.pkl'
 
@@ -37,18 +46,24 @@ for i in range(len(files)):
 if np.sum(sourceID-ID) != 0:
     pdb.set_trace()
 
-
-qwe= np.where(age < 20)[0]
-plt.plot(BP-RP,G,',k')
-plt.plot(BP[qwe]-RP[qwe],G[qwe],'.b')
-plt.ylim([15,05])
-plt.show()
-
-
-
-
-
-
+qwe= np.where(age<200)[0]
+asd= np.where(np.isnan(age))[0]
 
 pdb.set_trace()
+
+pickle.dump((ID,age,mass,sig_age,sig_mass),open(outname,'wb'))
+
+#qwe= np.where(age < 20)[0]
+#plt.plot(BP-RP,G,',k')
+#plt.plot(BP[qwe]-RP[qwe],G[qwe],'.b')
+#plt.ylim([15,05])
+#plt.show()
+
+
+
+
+
+
+
+#pdb.set_trace()
 print 'Done'
