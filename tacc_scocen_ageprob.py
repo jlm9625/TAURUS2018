@@ -18,9 +18,10 @@ jobID = str(sys.argv[1])
 subg  = str(sys.argv[2])
 ##logging from the code
 keeplog = 'tacclogs/' + jobID +'_'+str(rank) +'_codelog.txt'
-logfile = open(keeplog,'wb')
-##want to turn it off, uncomment this??
-#logfile = 'tacclogs/dummylog.txt' ##remember to delete this file after job is done
+dologs=False
+if dologs == True: logfile = open(keeplog,'wb')
+
+
 
 ##Make a new folder for the results. If it doesn't exists already, cancel everything rather than overwrite stuff.
 ##output with starting timestamp to the current minute so all runs are distinguishable
@@ -43,11 +44,14 @@ if input_file == 'fail':
 
 
 ##here's the data, read it in. Assumes all data prep was done before on a local machine.
-logfile.write(str(rank) +': reading in input data \n')
-logfile.flush() 
+if dologs==True:
+    logfile.write(str(rank) +': reading in input data \n')
+    logfile.flush() 
 G,BP,RP,sig_G,sig_BP,sig_RP,sourceID = pickle.load(open(datadir+input_file,'rb'))
-logfile.write(str(rank) +': input read done \n')
-logfile.flush() 
+
+if dologs==True:
+    logfile.write(str(rank) +': input read done \n')
+    logfile.flush() 
 ##for testing on specific stars
 # torun = np.where((sourceID == 6057558691062793856) | (sourceID== 6237142264484167296) )[0]
 # G = G[torun]
@@ -86,32 +90,37 @@ sig_RP=sig_RP[myrange[0]:myrange[1]]
 sig_BP=sig_BP[myrange[0]:myrange[1]]
 sourceID=sourceID[myrange[0]:myrange[1]]
 
-
-logfile.write(str(rank) +': reading in model samples \n')
-logfile.flush() 
+if dologs==True:
+    logfile.write(str(rank) +': reading in model samples \n')
+    logfile.flush() 
 ##read in the model file Again, assuming it's pre-generated for us
 sample_2d = tau.sample_generate_2d(regen=False,outfilename=None,readfile='isochrones/Solar_fullrange_2M.pkl')
-logfile.write(str(rank) +': models sample read done \n')
-logfile.flush() 
+if dologs==True:
+    logfile.write(str(rank) +': models sample read done \n')
+    logfile.flush() 
 if (len(G) != len(BP)) | (len(G) != len(RP)) | (len(G) != len(sig_G)) | (len(G) != len(sig_RP)) | (len(G) != len(sig_BP)):
-    logfile.write(str(rank) +':' + 'input data not same size!!'+' \n')
-    logfile.flush()
+    if dologs==True:
+        logfile.write(str(rank) +':' + 'input data not same size!!'+' \n')
+        logfile.flush()
     comm.Abort()
-else: 
-    logfile.write(str(rank) +':' + 'inputs all right size starting on calculations \n')
-    logfile.flush()
-age,mass,sig_age,sig_mass = tau.probability_calculation_all(sample_2d,G,BP,RP,sig_G,sig_BP,sig_RP,sourceID,run_2mass=False,logfile=logfile)
+else:
+    if dologs==True:    
+        logfile.write(str(rank) +':' + 'inputs all right size starting on calculations \n')
+        logfile.flush()
+age,mass,sig_age,sig_mass = tau.probability_calculation_all(sample_2d,G,BP,RP,sig_G,sig_BP,sig_RP,sourceID,run_2mass=False,logfile=None)
 
-logfile.write(str(rank) +':' + 'calcs done outputting \n')
-logfile.flush()
+if dologs==True:
+    logfile.write(str(rank) +':' + 'calcs done outputting \n')
+    logfile.flush()
 ##now output everthing correctly
 ##make a unique filename and put it in the unique folder we already created/checked.
 #Just store the source ID's and the results to save space and time.
 #also store the range of data points used
 pickle.dump((sourceID,age,mass,sig_age,sig_mass,myrange),open(outdir + 'result_'+str(rank)+'_'+datestamp+'.pkl','wb'))
-logfile.write(str(rank) +':' + 'Done \n')
-logfile.flush()
-logfile.close()
+if dologs==True:
+    logfile.write(str(rank) +':' + 'Done \n')
+    logfile.flush()
+    logfile.close()
 print 'Done'
 
 

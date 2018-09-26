@@ -18,10 +18,10 @@ mfl = np.array(open(modfile,'rb').readlines())
 hinx = np.where(mfl == mfl[5])[0]
 dinx = np.where(mfl == mfl[6])[0]
 ainx = hinx-2
-ages = np.zeros(len(ainx))
-pdb.set_trace()
+ages = ()
+model_array = ()
 for i in range(len(ainx)):
-    ages[i] = float(mfl[ainx[i]].split(' ')[-1].split('\n')[0])*1000.0
+    ages += (float(mfl[ainx[i]].split(' ')[-1].split('\n')[0])*1000.0,)
     startline = hinx[i]+2
     if i< len(ainx)-1:    
         endline   = hinx[i+1]-2
@@ -29,8 +29,20 @@ for i in range(len(ainx)):
 
     thischunk = readcol(modfile,skipline=startline,skipafter=endline)
     ##now format this into a structure similar to the PARSEC models
+    ##define a recarray with the right columns but it will have only the columns we care about.
+    #headstring = 'Zini Age Mini  Mass   logL    logTe  logg  label   McoreTP C_O  period0 period1 pmode  Mloss  tau1m   X   Y   Xc  Xn  Xo  Cexcess  Z mbolmag  Gmag    G_BPmag  G_RPmag  B_Tmag  V_Tmag  Jmag    Hmag    Ksmag'
+    thisarray = np.recarray(len(thischunk[:,0]),dtype=[('Mini',float),('Mass',float),('Zini',float),('logTe',float),('logg',float),('Gmag',float),('G_BPmag',float),('G_RPmag',float)])
+    thisarray.Mini = thischunk[:,0]*1.0
+    thisarray.Mass = thischunk[:,0]*1.0
+    thisarray.Zini[:] = 0.0152
+    thisarray.logTe = np.log10(thischunk[:,1])
+    thisarray.logg  = thischunk[:,3]*1.0
+    thisarray.Gmag  =  thischunk[:,-3]*1.0
+    thisarray.G_RPmag  =  thischunk[:,-2]*1.0
+    thisarray.G_BPmag  =  thischunk[:,-1]*1.0
+    ##now pandas it into a dataframe
+    model_array += (pd.DataFrame.from_records(thisarray),)
+    print('Model age ' + str(float(mfl[ainx[i]].split(' ')[-1].split('\n')[0])*1000.0))
     
-
-
-
-pdb.set_trace()
+pickle.dump((ages,model_array),open(modfile.split('.')[0]+'_stacked.pkl','wb'))
+print 'Done'
