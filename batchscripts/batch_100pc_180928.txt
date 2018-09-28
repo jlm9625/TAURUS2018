@@ -1,0 +1,15 @@
+#!/bin/bash 
+#SBATCH -J tp100pc
+#SBATCH -o ../tacclogs/tp100pc.o%j 
+#SBATCH -N 14 
+#SBATCH -n 336 
+#SBATCH -p normal 
+#SBATCH -t 05:00:00 
+#SBATCH -A BAFGKM 
+#SBATCH --mail-user=arizz@astro.as.utexas.edu 
+#SBATCH --mail-type=begin 
+#SBATCH --mail-type=end 
+module load python 
+cd ../
+ibrun python tacc_100pc_ageprob.py tp100pc 
+
