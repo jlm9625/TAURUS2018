@@ -11,5 +11,5 @@
 #SBATCH --mail-type=end 
 module load python 
 cd ../
-ibrun python tacc_100pc_ageprob.py tp100pc 
+ibrun python tacc_100pc_ageprob.py tp100parsec 
 

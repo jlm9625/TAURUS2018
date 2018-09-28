@@ -4,17 +4,24 @@ import matplotlib.pyplot as plt
 import glob,pdb,os,sys
 
 ##US chunk
-datadir= 'outputs/US180919_20180919-16:13/'
-datafile = 'datastorage/gaia_dr2_usco_inputformat_20180516pair_ageprobcleaned_20180919-12:58:56_inputformat.pkl'
-outname= 'US_ageprob.pkl'
+# datadir= 'outputs/US180919_20180919-16:13/'
+# datafile = 'datastorage/gaia_dr2_usco_inputformat_20180516pair_ageprobcleaned_20180919-12:58:56_inputformat.pkl'
+# outname= 'US_ageprob.pkl'
+# 
+# datadir= 'outputs/UCL180919_20180919-22:32/'
+# datafile= 'datastorage/gaia_dr2_ucl_inputformat_20180511pair_ageprobcleaned_20180919-13:51:29_inputformat.pkl'
+# outname='UCL_ageprob.pkl'
+# 
+# datadir= 'outputs/LCC180919_20180919-22:49/'
+# datafile='datastorage/gaia_dr2_lcc_inputformat_20180511pair_ageprobcleaned_20180919-14:08:34_inputformat.pkl'
+# outname = 'LCC_ageprob.pkl'
 
-datadir= 'outputs/UCL180919_20180919-22:32/'
-datafile= 'datastorage/gaia_dr2_ucl_inputformat_20180511pair_ageprobcleaned_20180919-13:51:29_inputformat.pkl'
-outname='UCL_ageprob.pkl'
+##100 pc chunk
+datadir = 'outputs/tp100pc_20180928-13:13/'
+datafile = 'datastorage/gaia_dr2_100pc_ageprobcleaned_20180928-12:02:48_arenouclean_inputformat.pkl'
+outname = '100pc_20180928-12:02:48_arenouclean_ageprob.pkl'
 
-datadir= 'outputs/LCC180919_20180919-22:49/'
-datafile='datastorage/gaia_dr2_lcc_inputformat_20180511pair_ageprobcleaned_20180919-14:08:34_inputformat.pkl'
-outname = 'LCC_ageprob.pkl'
+
 
 #gaia_dr2_lcc_inputformat_20180511pair_ageprobcleaned_20180919-14:08:34_inputformat.pkl'
 
