@@ -2,6 +2,7 @@ import numpy as np
 import pickle 
 import matplotlib.pyplot as plt
 import glob,pdb,os,sys
+from readcol import readcol
 
 ##US chunk
 # datadir= 'outputs/US180919_20180919-16:13/'
@@ -17,9 +18,9 @@ import glob,pdb,os,sys
 # outname = 'LCC_ageprob.pkl'
 
 ##100 pc chunk
-datadir = 'outputs/tp100bhac_20180928-14:34/'
+datadir = 'outputs/tp100bhac_20180928-15:07/'
 datafile = 'datastorage/gaia_dr2_100pc_ageprobcleaned_20180928-14:17:59_arenouclean_inputformat.pkl'
-outname = '100pc_20180928-14:34_arenouclean_ageprob.pkl'
+outname = 'tp100bhac_20180928-15:07_arenouclean_ageprob.pkl'
 
 
 
@@ -33,8 +34,8 @@ fnum  =fnum[order]
 files =files[order]
 
 G,BP,RP,sig_G,sig_BP,sig_RP,ID = pickle.load(open(datafile,'rb'))
-
-pdb.set_trace()
+aa = readcol('isochrones/bhac_20myr.txt',asRecArray=True )
+#pdb.set_trace()
 for i in range(len(files)):
     print(str(i))
     if i == 0: 
