@@ -70,15 +70,18 @@ def clean_gaia_data(data,outfilename,outdir='datastorage/',noclean=False,arenou_
         data = data.drop(data.index[badrow])
         
         ##now apply cleaning used by gaia team in lingegren 2018 and arenou 2018 to select "astrometrically clean subsets"
-        u_param = data.astrometric_chi2_al.values/(data.astrometric_n_good_obs_al.values - 5)
+        u_param = np.sqrt(data.astrometric_chi2_al.values/(data.astrometric_n_good_obs_al.values - 5))
         b_r = data.phot_bp_mean_mag.values-data.phot_rp_mean_mag.values
         ef = data.phot_bp_rp_excess_factor.values
         g = data.phot_g_mean_mag.values
+        dmod = +5-5*np.log10(1000.0/data.parallax.values)
         gexp = np.exp(-0.2*(g-19.5))
         qwe = np.where(gexp < 1.0)[0]
         gexp[qwe] = 1.0
         badrow = np.where((u_param >= 1.2*gexp) | (ef <=1.+0.015*b_r**2) | (ef >= 1.3+0.06*b_r**2))[0]
         goodrow = np.where((u_param < 1.2*gexp) & (ef >1.+0.015*b_r**2) & (ef < 1.3+0.06*b_r**2))[0]
+        gr2 = np.where(u_param < 1.2*gexp)[0]
+       # pdb.set_trace()
         data = data.drop(data.index[badrow])
         print('Removing ' + str(len(badrow)) +' that fail the lindegren/arenou cuts')
         

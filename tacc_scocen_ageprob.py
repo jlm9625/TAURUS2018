@@ -94,7 +94,7 @@ if dologs==True:
     logfile.write(str(rank) +': reading in model samples \n')
     logfile.flush() 
 ##read in the model file Again, assuming it's pre-generated for us
-sample_2d = tau.sample_generate_2d(regen=False,outfilename=None,readfile='isochrones/Solar_fullrange_2M.pkl')
+sample_2d = tau.sample_generate_2d(regen=False,outfilename=None,readfile='isochrones/BHAC15_solar_fullsample.pkl')
 if dologs==True:
     logfile.write(str(rank) +': models sample read done \n')
     logfile.flush() 

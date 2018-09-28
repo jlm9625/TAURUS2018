@@ -24,7 +24,7 @@ if rundata==True:
 
     
     dfile = 'gaia_dr2_100pc.csv'
-    data_dir = '/Volumes/UT1/'
+    data_dir = os.getenv('HOME') + '/data_local/'
     data = pd.read_csv(data_dir + dfile)
 
     #pdb.set_trace()
