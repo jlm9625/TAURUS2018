@@ -17,9 +17,9 @@ import glob,pdb,os,sys
 # outname = 'LCC_ageprob.pkl'
 
 ##100 pc chunk
-datadir = 'outputs/tp100pc_20180928-13:13/'
-datafile = 'datastorage/gaia_dr2_100pc_ageprobcleaned_20180928-12:02:48_arenouclean_inputformat.pkl'
-outname = '100pc_20180928-12:02:48_arenouclean_ageprob.pkl'
+datadir = 'outputs/tp100bhac_20180928-14:34/'
+datafile = 'datastorage/gaia_dr2_100pc_ageprobcleaned_20180928-14:17:59_arenouclean_inputformat.pkl'
+outname = '100pc_20180928-14:34_arenouclean_ageprob.pkl'
 
 
 
@@ -34,7 +34,7 @@ files =files[order]
 
 G,BP,RP,sig_G,sig_BP,sig_RP,ID = pickle.load(open(datafile,'rb'))
 
-
+pdb.set_trace()
 for i in range(len(files)):
     print(str(i))
     if i == 0: 
