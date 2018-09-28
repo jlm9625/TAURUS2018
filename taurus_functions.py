@@ -33,13 +33,13 @@ def readfile(filename):
     output = pd.read_csv(filename, sep=',')
     return output
     
-def clean_gaia_data(data,outfilename,outdir='datastorage/',noclean=False):
+def clean_gaia_data(data,outfilename,outdir='datastorage/',noclean=False,arenou_clean=False):
     '''
     input a pandas table for Gaia data and clean it with some limits
     also input a filename string for the output.
     In future this needs to take in an additional table of 2MASS J/H/K magnitudes.
     '''
-    if noclean == False:
+    if (noclean == False) & (arenou_clean==False):
         badrow = np.where((np.isnan(data.parallax.values) == True) & (np.isnan(data.phot_g_mean_mag.values) == True) & (np.isnan(data.phot_rp_mean_mag.values) == True) & (np.isnan(data.phot_bp_mean_mag.values) == True))[0]
         if len(badrow) == len(data):
             print('Everything is NaN!?!?!?!?')
@@ -49,7 +49,6 @@ def clean_gaia_data(data,outfilename,outdir='datastorage/',noclean=False):
 
         data = data.drop(data.index[badrow])
 
-
         ##Jordyn this is where this magnitude cuts can be placed. Note that
         ##these are searching in the negative sense.
         badrow = np.where((data.phot_bp_mean_flux_over_error.values) < 5)[0] 
@@ -58,7 +57,33 @@ def clean_gaia_data(data,outfilename,outdir='datastorage/',noclean=False):
             return -1
         print('Removing ' + str(len(badrow)) + ' entries with bad photometry/parallax')
         data = data.drop(data.index[badrow])
-    if noclean == True:
+    
+    if (arenou_clean==True):
+        ##first kill nans
+        badrow = np.where((np.isnan(data.parallax.values) == True) & (np.isnan(data.phot_g_mean_mag.values) == True) & (np.isnan(data.phot_rp_mean_mag.values) == True) & (np.isnan(data.phot_bp_mean_mag.values) == True))[0]
+        if len(badrow) == len(data):
+            print('Everything is NaN!?!?!?!?')
+            print('Not outputting anything')
+            return -1
+        print('Removing ' + str(len(badrow)) + ' entries with NaNs in key data')
+
+        data = data.drop(data.index[badrow])
+        
+        ##now apply cleaning used by gaia team in lingegren 2018 and arenou 2018 to select "astrometrically clean subsets"
+        u_param = data.astrometric_chi2_al.values/(data.astrometric_n_good_obs_al.values - 5)
+        b_r = data.phot_bp_mean_mag.values-data.phot_rp_mean_mag.values
+        ef = data.phot_bp_rp_excess_factor.values
+        g = data.phot_g_mean_mag.values
+        gexp = np.exp(-0.2*(g-19.5))
+        qwe = np.where(gexp < 1.0)[0]
+        gexp[qwe] = 1.0
+        badrow = np.where((u_param >= 1.2*gexp) | (ef <=1.+0.015*b_r**2) | (ef >= 1.3+0.06*b_r**2))[0]
+        goodrow = np.where((u_param < 1.2*gexp) & (ef >1.+0.015*b_r**2) & (ef < 1.3+0.06*b_r**2))[0]
+        data = data.drop(data.index[badrow])
+        print('Removing ' + str(len(badrow)) +' that fail the lindegren/arenou cuts')
+        
+        
+    if (noclean == True) & (arenou_clean==False):
         print('not cleaning anything from the input data')
         ##just replace nans with 0 and a huge error
         #actually, nans should just propagate, producing nans in the output right? THat's probably fine for now
@@ -67,6 +92,7 @@ def clean_gaia_data(data,outfilename,outdir='datastorage/',noclean=False):
     ##output the results
     ##output with starting timestamp for uniquness
     datestamp    = time.strftime('%Y%m%d-%H:%M:%S', time.localtime(time.time()))
+    if arenou_clean == True: datestamp += '_arenouclean'
     usefname = outfilename.split('.')[0] + '_'+datestamp + '.'+outfilename.split('.')[1]
     
     ##Check for overwrite, should never happen with timestamping but who knows...
@@ -392,7 +418,13 @@ def probability_calculation_singlestar(random_samples,G,BP,RP,sig_G,sig_BP,sig_R
     prob_data_modbpmag = 1/np.sqrt(2*np.pi*sig_BP**2)*np.exp(-(interp_bpmag - BP)**2/2.0/sig_BP**2)
     priors =  (1/((1/(-1.35))*((1.0**(-1.35))-(0.1)**((-1.35)))))*(random_mass)**(-2.35)
     
-    prob_data_mod = prob_data_modgmag*prob_data_modgmag*prob_data_modbpmag*priors
+    ##we've missed a prior here: our log-flat age sampling builds in a bias to smaller ages:
+    ##to fixe this we need to correct for this by doing a variable transform from Log10X to X
+    
+    dydx = np.log10(np.exp(1.0))*1/random_age
+    prob_age = dydx*1.0 ##f(x) = f(y)dy/dx with f(y) = 1.0 (uniform)
+    
+    prob_data_mod = prob_data_modgmag*prob_data_modgmag*prob_data_modbpmag*priors/prob_age
     
     ##ACR!!: Put 2mass JHK work here in future!!
     if run_2mass == True:

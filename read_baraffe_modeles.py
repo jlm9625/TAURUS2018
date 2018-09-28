@@ -38,11 +38,12 @@ for i in range(len(ainx)):
     thisarray.logTe = np.log10(thischunk[:,1])
     thisarray.logg  = thischunk[:,3]*1.0
     thisarray.Gmag  =  thischunk[:,-3]*1.0
-    thisarray.G_RPmag  =  thischunk[:,-2]*1.0
-    thisarray.G_BPmag  =  thischunk[:,-1]*1.0
+    thisarray.G_RPmag  =  thischunk[:,-1]*1.0
+    thisarray.G_BPmag  =  thischunk[:,-2]*1.0
     ##now pandas it into a dataframe
     model_array += (pd.DataFrame.from_records(thisarray),)
     print('Model age ' + str(float(mfl[ainx[i]].split(' ')[-1].split('\n')[0])*1000.0))
     
 pickle.dump((ages,model_array),open(modfile.split('.')[0]+'_stacked.pkl','wb'))
+print('Model saved to '+modfile.split('.')[0]+'_stacked.pkl')
 print 'Done'
