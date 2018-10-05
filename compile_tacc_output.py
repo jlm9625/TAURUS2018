@@ -2,6 +2,7 @@ import numpy as np
 import pickle 
 import matplotlib.pyplot as plt
 import glob,pdb,os,sys
+import pandas as pd
 from readcol import readcol
 
 ##US chunk
@@ -18,10 +19,10 @@ from readcol import readcol
 # outname = 'LCC_ageprob.pkl'
 
 ##100 pc chunk
-datadir = 'outputs/tp100bhac_20180928-15:07/'
+datadir = 'outputs/tp100bhac_20180928-15:59/'
 datafile = 'datastorage/gaia_dr2_100pc_ageprobcleaned_20180928-14:17:59_arenouclean_inputformat.pkl'
-outname = 'tp100bhac_20180928-15:07_arenouclean_ageprob.pkl'
-
+outname = 'tp100bhac_20180928-15:59_arenouclean_ageprob.pkl'
+pairgaia = 'datastorage/gaia_dr2_100pc_ageprobcleaned_20180928-14:17:59_arenouclean.csv'
 
 
 #gaia_dr2_lcc_inputformat_20180511pair_ageprobcleaned_20180919-14:08:34_inputformat.pkl'
@@ -54,18 +55,34 @@ for i in range(len(files)):
 if np.sum(sourceID-ID) != 0:
     pdb.set_trace()
 
-qwe= np.where(age<200)[0]
-asd= np.where(np.isnan(age))[0]
 
+
+print ('reading pandas data table of gaia cat ')
+data = pd.read_csv(pairgaia)
+
+
+
+
+qwe= np.where((age>0)&(age<40) & (G>4.5) )[0]
+from gal_xyz import gal_xyz
+
+x,y,z = gal_xyz(data.ra.values,data.dec.values,data.parallax.values,radec=True,plx=True)
+asd = np.where((x[qwe] < -35) & (y[qwe] < -64))[0]
 pdb.set_trace()
+##visual check HRD at age 20
+plt.plot(BP-RP,G,',k')
+plt.plot(BP[qwe]-RP[qwe],G[qwe],'.b')
+plt.plot(aa.G_BP-aa.G_RP,aa.G,'b')
+plt.ylim([15,-2])
+plt.show()
+
+
+
 
 pickle.dump((ID,age,mass,sig_age,sig_mass),open(outname,'wb'))
 
 #qwe= np.where(age < 20)[0]
-#plt.plot(BP-RP,G,',k')
-#plt.plot(BP[qwe]-RP[qwe],G[qwe],'.b')
-#plt.ylim([15,05])
-#plt.show()
+
 
 
 

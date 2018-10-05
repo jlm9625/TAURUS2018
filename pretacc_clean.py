@@ -28,7 +28,7 @@ if rundata==True:
     data = pd.read_csv(data_dir + dfile)
 
     #pdb.set_trace()
-    clean_dfile = tau.clean_gaia_data(data,dfile.split('.')[0] +'_ageprobcleaned.pkl',noclean=False,arenou_clean=True)
+    clean_dfile = tau.clean_gaia_data(data,dfile.split('.')[0] +'_ageprobcleaned.csv',noclean=False,arenou_clean=True)
     print(clean_dfile)
     #pdb.set_trace()
 
@@ -43,7 +43,7 @@ if generate_model == True:
     modfile,outfilename   = 'isochrones/parsec1.2s_z0.0152_GDR2_2MASS_stacked.pkl','Solar_fullrange_2M.pkl' ##SOLAR METALLICITY PARSEC
     modfile,outfilename   = 'isochrones/baraffe_2015_solar_gaia_stacked.pkl','BHAC15_solar_fullsample.pkl'##SOLAR METALLICITY BHAC15
     
-    sample_2d = tau.sample_generate_2d(nsamples=2000000,regen=True,use_mini=True,outfilename = outfilename,modelfile=modfile,agelims=[1.0,3000.0],masslims=[0.01,1.4])
+    sample_2d = tau.sample_generate_2d(nsamples=2000000,regen=False,readfile = outfilename,use_mini=True,outfilename = outfilename,modelfile=modfile,agelims=[1.0,3000.0],masslims=[0.01,1.4])
 #sample_2d = tau.sample_generate_2d(nsamples=100000,regen=False,outfilename = None,readfile='isochrones/Solar_fullrange_2M.pkl',modelfile=None,agelims=[1.0,3000.0],masslims=[0.1,1.0])
 
 pdb.set_trace()

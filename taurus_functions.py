@@ -392,13 +392,7 @@ def sample_generate_3d(nsamples=2000000, regen=False, outfilename='isochrones_me
         pickle.dump(model_stars, open(outfilename,'wb'))
         print('outputting samples to ' + outfilename + ' and returning the samples to user')
         return model_stars
-        
-    
-    
-    
-    
-    
-    
+
     
     
         
