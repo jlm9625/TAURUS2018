@@ -3,4 +3,5 @@
 *.png
 *.csv
 *.npy
+*.pyc
 parsec*.txt

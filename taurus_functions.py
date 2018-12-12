@@ -33,35 +33,69 @@ def readfile(filename):
     output = pd.read_csv(filename, sep=',')
     return output
     
-def clean_gaia_data(data,outfilename,outdir='datastorage/'):
+def clean_gaia_data(data,outfilename,outdir='datastorage/',noclean=False,arenou_clean=False):
     '''
     input a pandas table for Gaia data and clean it with some limits
     also input a filename string for the output.
     In future this needs to take in an additional table of 2MASS J/H/K magnitudes.
     '''
+    if (noclean == False) & (arenou_clean==False):
+        badrow = np.where((np.isnan(data.parallax.values) == True) & (np.isnan(data.phot_g_mean_mag.values) == True) & (np.isnan(data.phot_rp_mean_mag.values) == True) & (np.isnan(data.phot_bp_mean_mag.values) == True))[0]
+        if len(badrow) == len(data):
+            print('Everything is NaN!?!?!?!?')
+            print('Not outputting anything')
+            return -1
+        print('Removing ' + str(len(badrow)) + ' entries with NaNs in key data')
+
+        data = data.drop(data.index[badrow])
+
+        ##Jordyn this is where this magnitude cuts can be placed. Note that
+        ##these are searching in the negative sense.
+        badrow = np.where((data.phot_bp_mean_flux_over_error.values) < 5)[0] 
+        if len(badrow) == len(data):
+            print('Your limit cuts ate all the data! Not outputting anything')
+            return -1
+        print('Removing ' + str(len(badrow)) + ' entries with bad photometry/parallax')
+        data = data.drop(data.index[badrow])
     
-    badrow = np.where((np.isnan(data.parallax.values) == True) & (np.isnan(data.phot_g_mean_mag.values) == True) & (np.isnan(data.phot_rp_mean_mag.values) == True) & (np.isnan(data.phot_bp_mean_mag.values) == True))[0]
-    if len(badrow) == len(data):
-        print('Everything is NaN!?!?!?!?')
-        print('Not outputting anything')
-        return -1
-    print('Removing ' + str(len(badrow)) + ' entries with NaNs in key data')
+    if (arenou_clean==True):
+        ##first kill nans
+        badrow = np.where((np.isnan(data.parallax.values) == True) & (np.isnan(data.phot_g_mean_mag.values) == True) & (np.isnan(data.phot_rp_mean_mag.values) == True) & (np.isnan(data.phot_bp_mean_mag.values) == True))[0]
+        if len(badrow) == len(data):
+            print('Everything is NaN!?!?!?!?')
+            print('Not outputting anything')
+            return -1
+        print('Removing ' + str(len(badrow)) + ' entries with NaNs in key data')
 
-    data = data.drop(data.index[badrow])
+        data = data.drop(data.index[badrow])
+        
+        ##now apply cleaning used by gaia team in lingegren 2018 and arenou 2018 to select "astrometrically clean subsets"
+        u_param = np.sqrt(data.astrometric_chi2_al.values/(data.astrometric_n_good_obs_al.values - 5))
+        b_r = data.phot_bp_mean_mag.values-data.phot_rp_mean_mag.values
+        ef = data.phot_bp_rp_excess_factor.values
+        g = data.phot_g_mean_mag.values
+        dmod = +5-5*np.log10(1000.0/data.parallax.values)
+        gexp = np.exp(-0.2*(g-19.5))
+        qwe = np.where(gexp < 1.0)[0]
+        gexp[qwe] = 1.0
+        badrow = np.where((u_param >= 1.2*gexp) | (ef <=1.+0.015*b_r**2) | (ef >= 1.3+0.06*b_r**2))[0]
+        goodrow = np.where((u_param < 1.2*gexp) & (ef >1.+0.015*b_r**2) & (ef < 1.3+0.06*b_r**2))[0]
+        gr2 = np.where(u_param < 1.2*gexp)[0]
+       # pdb.set_trace()
+        data = data.drop(data.index[badrow])
+        print('Removing ' + str(len(badrow)) +' that fail the lindegren/arenou cuts')
+        
+        
+    if (noclean == True) & (arenou_clean==False):
+        print('not cleaning anything from the input data')
+        ##just replace nans with 0 and a huge error
+        #actually, nans should just propagate, producing nans in the output right? THat's probably fine for now
+        ##badrow = np.where((np.isnan(data.parallax.values) == True) | (np.isnan(data.phot_g_mean_mag.values) == True) | (np.isnan(data.phot_rp_mean_mag.values) == True) | (np.isnan(data.phot_bp_mean_mag.values) == True))[0]
 
-
-    ##Jordyn this is where this magnitude cuts can be placed. Note that
-    ##these are searching in the negative sense.
-    badrow = np.where((data.phot_bp_mean_flux_over_error.values) < 5)[0] 
-    if len(badrow) == len(data):
-        print('Your limit cuts ate all the data! Not outputting anything')
-        return -1
-    print('Removing ' + str(len(badrow)) + ' entries with bad photometry/parallax')
-    data = data.drop(data.index[badrow])
-    
     ##output the results
     ##output with starting timestamp for uniquness
     datestamp    = time.strftime('%Y%m%d-%H:%M:%S', time.localtime(time.time()))
+    if arenou_clean == True: datestamp += '_arenouclean'
     usefname = outfilename.split('.')[0] + '_'+datestamp + '.'+outfilename.split('.')[1]
     
     ##Check for overwrite, should never happen with timestamping but who knows...
@@ -76,7 +110,7 @@ def clean_gaia_data(data,outfilename,outdir='datastorage/'):
     ##if everything is fine give the user the final filename of the clean data.
     return outdir+usefname
 
-def produce_data_gaia(data):
+def produce_data_gaia(data,writetofile=False):
     '''
     calculate mags, errors, and all those things for a 
     set of data. Assumes you have already cleaned the data for bad entries in 
@@ -113,7 +147,9 @@ def produce_data_gaia(data):
     abs_mag_bp_error = np.sqrt((mag_bp_error)**2 + np.abs(5*(data.parallax_error.values/data.parallax.values)/(np.log(10)))**2)
     abs_mag_rp_error = np.sqrt((mag_rp_error)**2 + np.abs(5*(data.parallax_error.values/data.parallax.values)/(np.log(10)))**2)
 
-    
+    if writetofile != False:
+        pickle.dump((abs_mag_g,abs_mag_bp,abs_mag_rp,abs_mag_g_error,abs_mag_bp_error,abs_mag_rp_error,data.source_id.values),open(writetofile,'wb'))
+        print('wrote the input variable to ' + writetofile)
     return abs_mag_g,abs_mag_bp,abs_mag_rp,abs_mag_g_error,abs_mag_bp_error,abs_mag_rp_error,data.source_id.values
     
 
@@ -317,7 +353,7 @@ def sample_generate_3d(nsamples=2000000, regen=False, outfilename='isochrones_me
                 high_rpmag = -2.5*np.log10(10**(-0.4*high_rpmag) + 10**(-0.4*high_rpmag_comp))
                 
                 ##add them to the corresponding values for the primary
-            if random_tripprob[i] < #I don't have the Raghavan paper with this info, so if you could sent that to me I can add in                                     the value here
+            if random_tripprob[i]: ##< #I don't have the Raghavan paper with this info, so if you could sent that to me I can add in                                     the value here
                 random_companion_1_mass = np.random.uniform(np.max([lmass[0],hmass[0]]),random_mass[i],size=1)[0]
                 random_companion_2_mass = np.random.uniform(np.max([lmass[0],hmass[0]]),random_mass[i],size=1)[0]
                 triple_flag_1[i] = random_companion_1_mass/random_mass[i] #Not sure the best way/how to do this; I'm assuming we want to just divide the mass of the original target object by 3 and create 3 new objects?
@@ -356,13 +392,7 @@ def sample_generate_3d(nsamples=2000000, regen=False, outfilename='isochrones_me
         pickle.dump(model_stars, open(outfilename,'wb'))
         print('outputting samples to ' + outfilename + ' and returning the samples to user')
         return model_stars
-        
-    
-    
-    
-    
-    
-    
+
     
     
         
@@ -385,7 +415,13 @@ def probability_calculation_singlestar(random_samples,G,BP,RP,sig_G,sig_BP,sig_R
     prob_data_modbpmag = 1/np.sqrt(2*np.pi*sig_BP**2)*np.exp(-(interp_bpmag - BP)**2/2.0/sig_BP**2)
     priors =  (1/((1/(-1.35))*((1.0**(-1.35))-(0.1)**((-1.35)))))*(random_mass)**(-2.35)
     
-    prob_data_mod = prob_data_modgmag*prob_data_modgmag*prob_data_modbpmag*priors
+    ##we've missed a prior here: our log-flat age sampling builds in a bias to smaller ages:
+    ##to fixe this we need to correct for this by doing a variable transform from Log10X to X
+    
+    dydx = np.log10(np.exp(1.0))*1/random_age
+    prob_age = dydx*1.0 ##f(x) = f(y)dy/dx with f(y) = 1.0 (uniform)
+    
+    prob_data_mod = prob_data_modgmag*prob_data_modgmag*prob_data_modbpmag*priors/prob_age
     
     ##ACR!!: Put 2mass JHK work here in future!!
     if run_2mass == True:
@@ -431,7 +467,7 @@ def show_me_histograms(prob,model_age,model_mass,savename = '',ar=[1.0,3000.],mr
     if savename != '': plt.savefig(savename)
     plt.show()
     
-def probability_calculation_all(random_samples,G,BP,RP,sig_G,sig_BP,sig_RP,sourceID,run_2mass=False):   
+def probability_calculation_all(random_samples,G,BP,RP,sig_G,sig_BP,sig_RP,sourceID,run_2mass=False,logfile=None):   
     '''
     mag and error inputs are now arrays
     This just loops probability_calculation_singlestar for each stars
@@ -439,6 +475,9 @@ def probability_calculation_all(random_samples,G,BP,RP,sig_G,sig_BP,sig_RP,sourc
     
     if (len(G) != len(BP)) | (len(G) != len(RP)) | (len(G) != len(sig_G)) | (len(G) != len(sig_RP)) | (len(G) != len(sig_BP)) : 
         print('Input photometry/error arrays are not the same size!!!!!!')
+        if logfile != None:
+            logfile.write('pcalc: inputs wrong sizes, this cant happen so.... \n') 
+            logfile.flush()
         return -1
     
     age_result  = np.zeros(len(G))
@@ -447,16 +486,22 @@ def probability_calculation_all(random_samples,G,BP,RP,sig_G,sig_BP,sig_RP,sourc
     mass_error  = np.zeros(len(G))
     tstart = time.time()
     for i in range(len(G)):
+        if logfile != None:
+            logfile.write('pcalc: ' + str(i) + ' of ' + str(len(G)) + ' ' + str(sourceID[i]) + ' \n')
+            logfile.flush()
         prob_model_given_data_star,expage,expmass,sigage,sigmass = probability_calculation_singlestar(random_samples,G[i],BP[[i]],RP[[i]],sig_G[[i]],sig_BP[[i]],sig_RP[[i]],sourceID[[i]],run_2mass=run_2mass,showhist=False)
         age_result[i]  = expage*1.0
         mass_result[i] = expmass*1.0
         age_error[i]   = sigage*1.0
         mass_error[i]  = sigmass*1.0
     
-    if np.mod(i+1,1) == 0:
-        tneed = (time.time()-tstart)/(i+1)*(len(G)-i-1)
-        print('Up to ' + str(i+1) + ' out of ' + str(len(G)) + ' stars')
-        print('Will finish at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tneed+time.time())))
+        if np.mod(i+1,100) == 0:
+            tneed = (time.time()-tstart)/(i+1)*(len(G)-i-1)
+            print('Up to ' + str(i+1) + ' out of ' + str(len(G)) + ' stars')
+            print('Will finish at ' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tneed+time.time())))
+    if logfile != None:
+        logfile.write('finished pcalc, returning \n')
+        logfile.flush()
     return age_result,mass_result,age_error,mass_error
 
 

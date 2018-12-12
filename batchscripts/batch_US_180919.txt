@@ -1,0 +1,15 @@
+#!/bin/bash 
+#SBATCH -J US180919
+#SBATCH -o ../tacclogs/US180919.o%j 
+#SBATCH -N 14 
+#SBATCH -n 336 
+#SBATCH -p normal 
+#SBATCH -t 12:00:00 
+#SBATCH -A BAFGKM 
+#SBATCH --mail-user=arizz@astro.as.utexas.edu 
+#SBATCH --mail-type=begin 
+#SBATCH --mail-type=end 
+module load python 
+cd ../
+ibrun python tacc_scocen_ageprob.py US180919 US
+
