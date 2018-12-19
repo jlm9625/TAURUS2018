@@ -282,6 +282,29 @@ def sample_generate_3d(nsamples=2000000, regen=False, outfilename='isochrones_me
 #        f = pickle.load(open(readfile, 'rb'))
         return f
     
+    ##!!ACR: instead of the following block, you need to first find all the stacked files: glob is easy
+    stacked_files = np.array(glob.glob('isochrones/*_stacked.pkl'))
+    model_Z = np.zeros(stacked_files)
+    model_arrays = ()
+    
+    for i,file in enumerate(stacked_files):
+        these_ages,these_models=pickle.load(open(file,'rb')) ##these_models will be an array with a table for each age
+        if i == 0 :model_ages = these_ages.copy()
+        if np.sum(model_ages-these_ages) != 0: 
+            print('Somethings wrong!!!')
+            pdb.set_trace()
+        model_arrays += (these_models,)
+        model_Z[i] = these_models[0].Zini[0]*1.0
+             
+    ##!!ACR: This should give you three arrays, a list of model ages, a list of model 
+    ##metallicity and a list the has (models for Z1, models for Z2, models for Z3....)
+    ##TO access stuff:
+    
+    ##If you want the stack for the second metallicity in model_Z, stuff = model_arrays[1], this will be a list of tables (models for age1,models for age 2, ....)
+    
+    
+    
+    ##!!ACR This all has to go
     if regen == True:
         print ('Generating Samples')
         if modelfile == None:
@@ -291,7 +314,7 @@ def sample_generate_3d(nsamples=2000000, regen=False, outfilename='isochrones_me
             print('The modelfile is non-existant!!')
             print('You tried to read: ' + modelfile + ' please try another ')
             return -1
-            
+     ##!!ACR....       
         model_ages,model_array=pickle.load(open(modelfile,'rb'))
         model_stars = np.zeros((nsamples,9),dtype=float)
         
@@ -306,6 +329,7 @@ def sample_generate_3d(nsamples=2000000, regen=False, outfilename='isochrones_me
         triple_flag_2 = np.zeros(len(random_mass)) -1 #Not sure if this is the best way to do this
        # pdb.set_trace()
         for i in range(len(random_age)):
+            ##!!ACR: all this stuff below is really done for each metallicity, so it's inside a bigger function.
             low_indx = np.where(model_ages <= random_age[i])[0][-1]
             high_indx = np.where(model_ages > random_age[i])[0][0]
             
